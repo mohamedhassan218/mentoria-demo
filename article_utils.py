@@ -14,4 +14,11 @@ def article_handler(url):
         is_separator_regex=False,
     )
     chunks = text_splitter.split_documents(doc)
-    return chunks
+    result = [c.page_content for c in chunks]
+    return result
+
+# chunks = article_handler('https://www.imdb.com/title/tt18075020/')
+
+# for c in chunks:
+#     print(c.page_content)
+#     print('\n')

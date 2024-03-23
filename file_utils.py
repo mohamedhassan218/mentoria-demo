@@ -1,5 +1,5 @@
 from langchain_text_splitters import CharacterTextSplitter, RecursiveCharacterTextSplitter
-from langchain_community.document_loaders import Docx2txtLoader
+from langchain_community.document_loaders import UnstructuredWordDocumentLoader
 from langchain_community.document_loaders import TextLoader
 import streamlit as st
 from PyPDF2 import PdfReader
@@ -17,18 +17,28 @@ def pdf_handler(doc):
         is_separator_regex=False,
     )
     chunks = text_splitter.split_text(text)
+    # Each chunks is a text.
+    for c in chunks:
+        print(c)    
+        print('\n')
     return chunks
     
 def word_handler(doc):
-    loader = Docx2txtLoader(doc)
+    st.write('word_handler entered')
+    st.write(doc)
+    loader = UnstructuredWordDocumentLoader(doc) 
     data = loader.load()
+    # data = loader.load()
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=600,
         chunk_overlap=100,
         length_function=len,
         is_separator_regex=False,
     )
+    st.write(data)
     chunks = text_splitter.split_documents(data)
+    
+    st.write('word_handler ended')
     return chunks
     
 def text_handler(doc):
