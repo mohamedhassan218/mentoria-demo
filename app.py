@@ -4,7 +4,7 @@ from youtube_utils import youtube_handler
 from article_utils import article_handler
 from file_utils import file_handler
 
-def youtube_url(url):
+def is_youtube_url(url):
     return 'youtube.com' in url
 
         
@@ -29,7 +29,7 @@ def main():
         if st.button("GO"):
             with st.spinner("Processing . . ."):
                 url = url.lower()
-                if youtube_url(url):
+                if is_youtube_url(url):
                     youtube_handler(url)
                 elif url:
                     article_handler(url)
