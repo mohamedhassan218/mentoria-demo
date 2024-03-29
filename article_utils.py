@@ -8,17 +8,16 @@
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import WebBaseLoader
-import streamlit as st
 
 
 def article_handler(url):
     """
-    This function is used to grap the content of the article by webscraping.
+    This function is used to grap the content of the article by webscraping then
+    it splits it into chunks.
 
     @param url: a string representing the URL of the article.
     @return result: list of strings represents the content of the article.
     """
-    st.write("Article URL")
     loader = WebBaseLoader(url)
     doc = loader.load()
     text_splitter = RecursiveCharacterTextSplitter(
@@ -33,8 +32,8 @@ def article_handler(url):
 
 
 if __name__ == "__main__":
-    # Just for debuging
     chunks = article_handler(
         "https://www.techtarget.com/searchenterpriseai/definition/AI-Artificial-Intelligence"
     )
+    print(f"Length of chunks: {len(chunks)}")
     print(chunks)
