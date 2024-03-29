@@ -8,8 +8,7 @@
 
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceHubEmbeddings
-from article_utils import article_handler
-from youtube_utils import youtube_handler
+from url_utils import article_handler, youtube_handler
 
 
 def get_vectorstore(text_chunks):

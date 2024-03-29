@@ -1,5 +1,4 @@
 import os
-import re
 from dotenv import load_dotenv
 from langchain_community.llms import HuggingFaceHub
 import streamlit as st
@@ -8,22 +7,12 @@ from langchain_community.document_loaders import YoutubeLoader
 from vectorstore_config import get_vectorstore
 import youtube_utils as yu
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from article_utils import article_handler
+from url_utils import article_handler
 from file_utils import file_handler
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 
 
-# Return true if the url is youtube URL.
-def is_youtube_url(url):
-    youtube_pattern = (
-        r"(https?://)?(www\.)?"
-        "(youtube|youtu|youtube-nocookie)\.(com|be)/"
-        "(watch\?v=|embed/|v/|.+\?v=)?([^&=%\?]{11})"
-    )
-    regex = re.compile(youtube_pattern)
-    match = regex.match(url)
-    return bool(match)
 
 
 def get_conversation_chain(repo_id, vectorstore):
@@ -132,3 +121,8 @@ def main():
 
 if __name__ == "__main__":
     main()
+    # chunks = yu.youtube_handler('https://youtu.be/EzTxYQmU8OE?si=EXIZ-dm7QpuCvBdF')
+
+    # for c in chunks:
+    #     print(c)
+    #     print('\n')
