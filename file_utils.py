@@ -11,6 +11,8 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import Docx2txtLoader, TextLoader
 import streamlit as st
 from PyPDF2 import PdfReader
+import os
+from tempfile import NamedTemporaryFile
 
 
 def pdf_handler(doc):
@@ -41,16 +43,19 @@ def word_handler(doc):
     @param doc: a File Object representing the Word file that we wanna to get its content.
     @return chunks: list of strings represents the content of the inserted Word File.
     """
-    loader = Docx2txtLoader(doc.read())
-    data = loader.load()
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=600,
-        chunk_overlap=100,
-        length_function=len,
-        is_separator_regex=False,
-    )
-    chunks = text_splitter.split_documents(data)
-    result = [chunk.page_content for chunk in chunks]
+    bytes_data = doc.read()
+    with NamedTemporaryFile(delete=False) as tmp:
+        tmp.write(bytes_data)
+        data = Docx2txtLoader(tmp.name).load()
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=600,
+            chunk_overlap=100,
+            length_function=len,
+            is_separator_regex=False,
+        )
+        chunks = text_splitter.split_documents(data)
+        result = [chunk.page_content for chunk in chunks]
+    os.remove(tmp.name)
     return result
 
 
@@ -61,17 +66,17 @@ def text_handler(doc):
     @param doc: a File Object representing the text file that we wanna to get its content.
     @return chunks: list of strings represents the content of the inserted text file.
     """
-    loader = TextLoader(doc)
-    data = loader.load()
+    text = ""
+    for line in doc:
+        text += str(line)
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=600,
         chunk_overlap=100,
         length_function=len,
         is_separator_regex=False,
     )
-    chunks = text_splitter.split_documents(data)
-    result = [chunk.page_content for chunk in chunks]
-    return result
+    chunks = text_splitter.split_text(text)
+    return chunks
 
 
 def file_handler(docs):
