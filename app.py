@@ -1,32 +1,16 @@
 import os
 from dotenv import load_dotenv
-from langchain_community.llms import HuggingFaceHub
 import streamlit as st
 from langchain_core.messages import AIMessage, HumanMessage
-from langchain_community.document_loaders import YoutubeLoader
-from vectorstore_config import get_vectorstore
+from rag_config import get_vectorstore
 from url_utils import url_handler
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from url_utils import article_handler
 from file_utils import file_handler
-from langchain.memory import ConversationBufferMemory
-from langchain.chains import ConversationalRetrievalChain
-from vectorstore_config import get_vectorstore
-
-
-def get_conversation_chain(repo_id, vectorstore):
-    memory = ConversationBufferMemory(return_messages=True)
-    llm = HuggingFaceHub(
-        repo_id=repo_id, model_kwargs={"temperature": 0.5, "max_length": 800}
-    )
-    conversation_chain = ConversationalRetrievalChain.from_llm(
-        llm=llm, retriever=vectorstore.as_retriever(), memory=memory
-    )
-    return conversation_chain
+from rag_config import get_vectorstore
 
 
 def get_response(user_prompt):
     response = st.session_state.conversation({"question": user_prompt})
+    st.session_state.chat_history = response["chat_history"]
     return response
 
 
@@ -38,7 +22,9 @@ def click_go():
 
 def main():
     load_dotenv()
-    repo_id = os.environ["REPO_ID"]
+    memory_llm_id = os.environ["SUMMARY_REPO_ID"]
+    qa_llm_id = os.environ["QA_REPO_ID"]
+    huggingface_token = os.environ["HUGGINGFACEHUB_API_TOKEN"]
 
     # Page Configuration.
     st.set_page_config(
@@ -73,6 +59,7 @@ def main():
 
         if st.session_state.GO:
             with st.spinner("Processing . . ."):
+                # Get chunks of text
                 if url:
                     url = url.lower()
                     st.session_state.chunks.extend(url_handler(url))
@@ -81,9 +68,9 @@ def main():
                     st.write(st.session_state.chunks)
 
                 # Get vectorstore
-                st.session_state.vectorstore, st.session_state.retriever = (
-                    get_vectorstore(st.session_state.chunks)
-                )
+                st.session_state.vectorstore = get_vectorstore(st.session_state.chunks)
+
+                # Get conversation
 
     # Activiate the chat only when the user put data sources.
     if not st.session_state.GO:
@@ -93,7 +80,7 @@ def main():
 
         if user_prompt is not None and user_prompt != "":
             # Write the documents with the high similarity with the user_prompt.
-            response = st.session_state.vectorstore.similarity_search(user_prompt)
+            response = get_response(user_prompt)
             st.session_state.chat_history.append(HumanMessage(content=user_prompt))
             st.session_state.chat_history.append(AIMessage(content=response))
 
@@ -113,7 +100,5 @@ if __name__ == "__main__":
 
 # Errors:
 # '''
-#     docx:         TypeError: isfile: path should be string, bytes, os.PathLike or integer, not UploadedFile
-#     txt:          Error loading UploadedFile(file_id='ba9e9d08-14f4-4897-9e9d-10cba5569c39', name='Transformers.txt', type='text/plain', size=1562, _file_urls=file_id: "ba9e9d08-14f4-4897-9e9d-10cba5569c39" upload_url: "/_stcore/upload_file/ea638215-036a-4b03-9aa9-aa4dfe72c7f5/ba9e9d08-14f4-4897-9e9d-10cba5569c39" delete_url: "/_stcore/upload_file/ea638215-036a-4b03-9aa9-aa4dfe72c7f5/ba9e9d08-14f4-4897-9e9d-10cba5569c39" )
 #     youtube_url:  Bad request: Value error, The inputs are invalid, at least one input is required: received `[]` in `parameters`
 # '''
