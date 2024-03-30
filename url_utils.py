@@ -65,11 +65,14 @@ def url_handler(url):
     @param url: a string represents the resource URL.
     @return result: a list of strings represents chunks of the content of the passed URL.
     """
-    if is_youtube_url(url):
-        result = youtube_handler(url)
+    if url is not None and url != "":
+        if is_youtube_url(url):
+            result = youtube_handler(url)
+        else:
+            result = article_handler(url)
+        return result
     else:
-        result = article_handler(url)
-    return result
+        return None
 
 
 if __name__ == "__main__":

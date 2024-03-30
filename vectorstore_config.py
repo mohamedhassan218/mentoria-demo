@@ -23,7 +23,8 @@ def get_vectorstore(text_chunks):
     """
     embeddings = HuggingFaceHubEmbeddings()
     vectorstore = FAISS.from_texts(texts=text_chunks, embedding=embeddings)
-    return vectorstore
+    retriever = vectorstore.as_retriever()
+    return vectorstore, retriever
 
 
 # Test the vectorstore

@@ -41,7 +41,7 @@ def word_handler(doc):
     @param doc: a File Object representing the Word file that we wanna to get its content.
     @return chunks: list of strings represents the content of the inserted Word File.
     """
-    loader = Docx2txtLoader(doc)
+    loader = Docx2txtLoader(doc.read())
     data = loader.load()
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=600,

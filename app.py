@@ -5,14 +5,13 @@ import streamlit as st
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_community.document_loaders import YoutubeLoader
 from vectorstore_config import get_vectorstore
-import youtube_utils as yu
+from url_utils import url_handler
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from url_utils import article_handler
 from file_utils import file_handler
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
-
-
+from vectorstore_config import get_vectorstore
 
 
 def get_conversation_chain(repo_id, vectorstore):
@@ -34,6 +33,7 @@ def get_response(user_prompt):
 # Activated when GO clicked.
 def click_go():
     st.session_state.GO = True
+    # st.session_state.vectorstore = get_vectorstore(st.session_state.chunks)
 
 
 def main():
@@ -60,6 +60,8 @@ def main():
         st.session_state.GO = False
     if "vectorstore" not in st.session_state:
         st.session_state.vectorstore = None
+    if "conversation" not in st.session_state:
+        st.session_state.conversation = None
 
     # Sidebar Components.
     with st.sidebar:
@@ -71,41 +73,27 @@ def main():
 
         if st.session_state.GO:
             with st.spinner("Processing . . ."):
-                url = url.lower()
-                if is_youtube_url(url):
-                    st.write("is_youtube")
-                    st.title("url")
-                    st.write(url)
-                    st.session_state.chunks.extend(yu.youtube_handler(url))
-                    st.title("chunks")
-                    st.write(st.session_state.chunks)
-                    st.write("is_youtube_url ended.")
-                elif url:
-                    st.session_state.chunks.extend(article_handler(url))
-                    st.write("ARTICLE_HELPER_DONE")  # for debugging.
-                    # st.write(st.session_state.chunks)
+                if url:
+                    url = url.lower()
+                    st.session_state.chunks.extend(url_handler(url))
                 if len(docs) > 0:
                     st.session_state.chunks.extend(file_handler(docs))
-                    st.write("FILE_HELPER_DONE")  # for debugging.
                     st.write(st.session_state.chunks)
 
-                # Get vectorstore.
-                if "conversation" not in st.session_state:
-                    st.session_state.vectorstore = get_vectorstore(
-                        st.session_state.chunks
-                    )
-                    st.session_state.conversation = get_conversation_chain(
-                        repo_id, st.session_state.vectorstore
-                    )
+                # Get vectorstore
+                st.session_state.vectorstore, st.session_state.retriever = (
+                    get_vectorstore(st.session_state.chunks)
+                )
 
     # Activiate the chat only when the user put data sources.
     if not st.session_state.GO:
-        st.info(body="You must enter data source", icon="⚠️")
+        st.info(body="You must enter data sources", icon="⚠️")
     else:
         user_prompt = st.chat_input("Enter your prompt . . .")
 
         if user_prompt is not None and user_prompt != "":
-            response = get_response(user_prompt)
+            # Write the documents with the high similarity with the user_prompt.
+            response = st.session_state.vectorstore.similarity_search(user_prompt)
             st.session_state.chat_history.append(HumanMessage(content=user_prompt))
             st.session_state.chat_history.append(AIMessage(content=response))
 
@@ -121,8 +109,11 @@ def main():
 
 if __name__ == "__main__":
     main()
-    # chunks = yu.youtube_handler('https://youtu.be/EzTxYQmU8OE?si=EXIZ-dm7QpuCvBdF')
 
-    # for c in chunks:
-    #     print(c)
-    #     print('\n')
+
+# Errors:
+# '''
+#     docx:         TypeError: isfile: path should be string, bytes, os.PathLike or integer, not UploadedFile
+#     txt:          Error loading UploadedFile(file_id='ba9e9d08-14f4-4897-9e9d-10cba5569c39', name='Transformers.txt', type='text/plain', size=1562, _file_urls=file_id: "ba9e9d08-14f4-4897-9e9d-10cba5569c39" upload_url: "/_stcore/upload_file/ea638215-036a-4b03-9aa9-aa4dfe72c7f5/ba9e9d08-14f4-4897-9e9d-10cba5569c39" delete_url: "/_stcore/upload_file/ea638215-036a-4b03-9aa9-aa4dfe72c7f5/ba9e9d08-14f4-4897-9e9d-10cba5569c39" )
+#     youtube_url:  Bad request: Value error, The inputs are invalid, at least one input is required: received `[]` in `parameters`
+# '''
