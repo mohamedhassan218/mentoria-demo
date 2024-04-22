@@ -2,16 +2,14 @@ import os
 from dotenv import load_dotenv
 import streamlit as st
 from langchain_core.messages import AIMessage, HumanMessage
-from rag_config import get_vectorstore
+from rag_config import get_vectorstore, get_conversation
 from url_utils import url_handler
 from file_utils import file_handler
-from rag_config import get_vectorstore
+from messages_templates import css, bot_template, user_template
 
 
 def get_response(user_prompt):
-    response = st.session_state.conversation({"question": user_prompt})
-    st.session_state.chat_history = response["chat_history"]
-    return response
+    return 0
 
 
 # Activated when GO clicked.
@@ -22,9 +20,7 @@ def click_go():
 
 def main():
     load_dotenv()
-    memory_llm_id = os.environ["SUMMARY_REPO_ID"]
-    qa_llm_id = os.environ["QA_REPO_ID"]
-    huggingface_token = os.environ["HUGGINGFACEHUB_API_TOKEN"]
+    gemini_api_key = os.environ["GOOGLE_API_KEY"]
 
     # Page Configuration.
     st.set_page_config(
@@ -32,6 +28,7 @@ def main():
         page_icon="robot.png",
         menu_items={},
     )
+    st.write(css, unsafe_allow_html=True)
     st.image("robot.png", width=150)
     st.markdown("# MENTORIA")
 
@@ -65,12 +62,14 @@ def main():
                     st.session_state.chunks.extend(url_handler(url))
                 if len(docs) > 0:
                     st.session_state.chunks.extend(file_handler(docs))
-                    st.write(st.session_state.chunks)
 
                 # Get vectorstore
                 st.session_state.vectorstore = get_vectorstore(st.session_state.chunks)
 
                 # Get conversation
+                st.session_state.conversation = get_conversation(
+                    st.session_state.vectorstore, gemini_api_key
+                )
 
     # Activiate the chat only when the user put data sources.
     if not st.session_state.GO:
@@ -80,18 +79,23 @@ def main():
 
         if user_prompt is not None and user_prompt != "":
             # Write the documents with the high similarity with the user_prompt.
-            response = get_response(user_prompt)
+            user_question = user_prompt
+            response = st.session_state.conversation.invoke(user_question)
             st.session_state.chat_history.append(HumanMessage(content=user_prompt))
             st.session_state.chat_history.append(AIMessage(content=response))
 
-        # Show all messages.
+        # # Show all messages.
         for message in st.session_state.chat_history:
             if isinstance(message, AIMessage):
-                with st.chat_message("AI"):
-                    st.write(message.content)
+                st.write(
+                    bot_template.replace("{{MSG}}", message.content),
+                    unsafe_allow_html=True,
+                )
             elif isinstance(message, HumanMessage):
-                with st.chat_message("Human"):
-                    st.write(message.content)
+                st.write(
+                    user_template.replace("{{MSG}}", message.content),
+                    unsafe_allow_html=True,
+                )
 
 
 if __name__ == "__main__":

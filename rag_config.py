@@ -10,8 +10,12 @@ from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceHubEmbeddings
 from url_utils import article_handler, youtube_handler
 from langchain.memory import ConversationSummaryMemory, ConversationBufferMemory
-from langchain_community.llms import HuggingFaceEndpoint
+from langchain_community.llms import HuggingFaceHub
 from langchain.chains import ConversationalRetrievalChain
+from langchain import hub
+from langchain_core.runnables import RunnablePassthrough
+from langchain_google_genai import GoogleGenerativeAI
+from langchain_core.output_parsers import StrOutputParser
 
 
 def get_vectorstore(text_chunks):
@@ -28,22 +32,19 @@ def get_vectorstore(text_chunks):
     vectorstore = FAISS.from_texts(texts=text_chunks, embedding=embeddings)
     return vectorstore
 
-
-def get_conversation(vectorstore, memory_llm_id, qa_llm_id, huggingface_token):
-    memory_llm = HuggingFaceEndpoint(
-        repo_id=memory_llm_id, max_length=128, temperature=0.7, token=huggingface_token
+# Return a chain that deals with a retriever to answer.
+# Doesn't have any memory yet.
+def get_conversation(vectorstore, google_key):
+    prompt = hub.pull("rlm/rag-prompt")
+    retriever = vectorstore.as_retriever()
+    llm = GoogleGenerativeAI(model="models/gemini-pro", google_api_key=google_key)
+    rag_chain = (
+        {"context": retriever, "question": RunnablePassthrough()}
+        | prompt
+        | llm
+        | StrOutputParser()
     )
-    # memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-    memory = ConversationSummaryMemory(
-        llm=memory_llm, return_messages=True, memory_key="chat_history"
-    )
-    qa_llm = HuggingFaceEndpoint(
-        repo_id=qa_llm_id, max_length=128, temperature=0.7, token=huggingface_token
-    )
-    chain = ConversationalRetrievalChain.from_llm(
-        llm=qa_llm, retriever=vectorstore.as_retriever(), memory=memory
-    )
-    return chain
+    return rag_chain
 
 
 # Test the vectorstore
