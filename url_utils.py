@@ -22,7 +22,7 @@ def youtube_handler(url):
     """
     loader = YoutubeLoader.from_youtube_url(url)
     transcript = loader.load()
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=150)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=900, chunk_overlap=150)
     chunks = text_splitter.split_documents(transcript)
     result = [doc.page_content for doc in chunks]
     return result
@@ -39,8 +39,8 @@ def article_handler(url):
     loader = WebBaseLoader(url)
     doc = loader.load()
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=600,
-        chunk_overlap=100,
+        chunk_size=900,
+        chunk_overlap=150,
         length_function=len,
         is_separator_regex=False,
     )

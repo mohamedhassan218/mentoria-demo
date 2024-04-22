@@ -27,8 +27,8 @@ def pdf_handler(doc):
     for page in pdf_reader.pages:
         text += page.extract_text()
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=600,
-        chunk_overlap=100,
+        chunk_size=900,
+        chunk_overlap=150,
         length_function=len,
         is_separator_regex=False,
     )
@@ -48,8 +48,8 @@ def word_handler(doc):
         tmp.write(bytes_data)
         data = Docx2txtLoader(tmp.name).load()
         text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=600,
-            chunk_overlap=100,
+            chunk_size=900,
+            chunk_overlap=150,
             length_function=len,
             is_separator_regex=False,
         )
@@ -70,8 +70,8 @@ def text_handler(doc):
     for line in doc:
         text += str(line)
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=600,
-        chunk_overlap=100,
+        chunk_size=900,
+        chunk_overlap=150,
         length_function=len,
         is_separator_regex=False,
     )
@@ -103,20 +103,3 @@ def file_handler(docs):
             chunks = text_handler(doc)
             all_chunks.extend(chunks)
     return all_chunks
-
-
-if __name__ == "__main__":
-    # Test pdf_handler()
-    pdf_chunks = pdf_handler(r"C:\Users\moham\Desktop\Papers\Octopus.pdf")
-    print(f"Length of chunks is: {len(pdf_chunks)}")
-    print(pdf_chunks)
-
-    # # Test word_handler()
-    word_chunks = word_handler(r"C:\Users\moham\Desktop\paper.docx")
-    print(f"Length of chunks is: {len(word_chunks)}")
-    print(word_chunks)
-
-    # Test text_handler()
-    text_chunks = text_handler(r"C:\Users\moham\Desktop\MENTORIA.txt")
-    print(f"Length of chunks is: {len(text_chunks)}")
-    print(text_chunks)
