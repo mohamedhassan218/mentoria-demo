@@ -27,8 +27,8 @@ def pdf_handler(doc):
     for page in pdf_reader.pages:
         text += page.extract_text()
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=900,
-        chunk_overlap=150,
+        chunk_size=150,
+        chunk_overlap=50,
         length_function=len,
         is_separator_regex=False,
     )
@@ -48,8 +48,8 @@ def word_handler(doc):
         tmp.write(bytes_data)
         data = Docx2txtLoader(tmp.name).load()
         text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=900,
-            chunk_overlap=150,
+            chunk_size=150,
+            chunk_overlap=50,
             length_function=len,
             is_separator_regex=False,
         )
@@ -70,8 +70,8 @@ def text_handler(doc):
     for line in doc:
         text += str(line)
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=900,
-        chunk_overlap=150,
+        chunk_size=150,
+        chunk_overlap=50,
         length_function=len,
         is_separator_regex=False,
     )
