@@ -91,15 +91,12 @@ def file_handler(docs):
     for doc in docs:
         file_name = doc.name
         if file_name.endswith(".pdf"):
-            st.write("pdf")
             chunks = pdf_handler(doc)
             all_chunks.extend(chunks)
         elif file_name.endswith(".doc") or file_name.endswith(".docx"):
-            st.write("word")
             chunks = word_handler(doc)
             all_chunks.extend(chunks)
         elif file_name.endswith(".txt"):
-            st.write("text")
             chunks = text_handler(doc)
             all_chunks.extend(chunks)
     return all_chunks
