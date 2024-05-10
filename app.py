@@ -5,39 +5,32 @@ from langchain_core.messages import AIMessage, HumanMessage
 from rag_config import get_vectorstore, get_conversation
 from url_utils import url_handler
 from file_utils import file_handler
-from messages_templates import css, bot_template, user_template
-
-
-def get_response(user_prompt):
-    return 0
 
 
 # Activated when GO clicked.
 def click_go():
     st.session_state.GO = True
-    # st.session_state.vectorstore = get_vectorstore(st.session_state.chunks)
 
 
 def main():
+    # Load Google API key.
     load_dotenv()
     gemini_api_key = os.environ["GOOGLE_API_KEY"]
 
     # Page Configuration.
     st.set_page_config(
         page_title="MENTORIA",
-        page_icon="robot.png",
+        page_icon="data\logo 2.png",
         menu_items={},
     )
-    st.write(css, unsafe_allow_html=True)
-    st.image("robot.png", width=150)
-    st.markdown("# MENTORIA")
+    st.image("data\logo 2.png", width=250)
 
     # Initialize session_state variables.
     if "chunks" not in st.session_state:
         st.session_state.chunks = []
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = [
-            AIMessage(content="Welcome to MENTORIA, How can I help U?")
+            AIMessage(content="Welcome to Mentoria, how can I help you?")
         ]
     if "GO" not in st.session_state:
         st.session_state.GO = False
@@ -56,53 +49,42 @@ def main():
 
         if st.session_state.GO:
             with st.spinner("Processing . . ."):
-                # Get chunks of text
+                # Get chunks of text.
                 if url:
                     url = url.lower()
                     st.session_state.chunks.extend(url_handler(url))
                 if len(docs) > 0:
                     st.session_state.chunks.extend(file_handler(docs))
 
-                # Get vectorstore
+                # Get vectorstore.
                 st.session_state.vectorstore = get_vectorstore(st.session_state.chunks)
 
-                # Get conversation
+                # Get conversation.
                 st.session_state.conversation = get_conversation(
                     st.session_state.vectorstore, gemini_api_key
                 )
 
-    # Activiate the chat only when the user put data sources.
+    # Activiate the chat only when the user put data sources and click GO.
     if not st.session_state.GO:
         st.info(body="You must enter data sources", icon="⚠️")
     else:
-        user_prompt = st.chat_input("Enter your prompt . . .")
+        user_prompt = st.chat_input("Enter your prompt here . . .")
 
         if user_prompt is not None and user_prompt != "":
-            # Write the documents with the high similarity with the user_prompt.
             user_question = user_prompt
             response = st.session_state.conversation.invoke(user_question)
             st.session_state.chat_history.append(HumanMessage(content=user_prompt))
             st.session_state.chat_history.append(AIMessage(content=response))
 
-        # # Show all messages.
+        # Show all messages.
         for message in st.session_state.chat_history:
             if isinstance(message, AIMessage):
-                st.write(
-                    bot_template.replace("{{MSG}}", message.content),
-                    unsafe_allow_html=True,
-                )
+                with st.chat_message("AI", avatar="data\logo 2.png"):
+                    st.write(message.content)
             elif isinstance(message, HumanMessage):
-                st.write(
-                    user_template.replace("{{MSG}}", message.content),
-                    unsafe_allow_html=True,
-                )
+                with st.chat_message("user"):
+                    st.write(message.content)
 
 
 if __name__ == "__main__":
     main()
-
-
-# Errors:
-# '''
-#     youtube_url:  Bad request: Value error, The inputs are invalid, at least one input is required: received `[]` in `parameters`
-# '''
