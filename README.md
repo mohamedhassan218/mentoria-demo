@@ -31,7 +31,7 @@ To try **mentoria** locally, follow those steps:
 
 1. Clone the repo:
     ``` bash
-    git clone https://github.com/mohamedhassan218/mentoria-demo
+    git clone git@github.com:mohamedhassan218/mentoria-demo.git
     ```
 
 
