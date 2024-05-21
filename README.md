@@ -19,10 +19,17 @@ Hopefully soon I'll add more options like OpenAI and Cohere and make the choice 
 
 - [MENTORIA - Demo](#mentoria---demo)
   - [Table of Contents](#table-of-contents)
+  - [Tools Used](#tools-used)
   - [Usage](#usage)
   - [Demo](#demo)
   - [Contributions](#contributions)
   - [Contact](#contact)
+
+## Tools Used
+- LangChain
+- Streamlit
+- FAISS
+- Gemini
 
 ## Usage
 
